@@ -1,0 +1,267 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* SchoolMaster Brand Colors */
+:root {
+  --brand-yellow: #F1C40F;
+  --brand-blue: #5F5AFC;
+  --brand-light-blue: #4A69BD;
+  --brand-black: #252627;
+  --brand-white: #ffffff;
+}
+
+/* Smooth scrolling for navigation */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom Animations */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes parallaxFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Parallax Elements */
+.parallax-float {
+  animation: parallaxFloat 6s ease-in-out infinite;
+}
+
+.parallax-float-delayed {
+  animation: parallaxFloat 6s ease-in-out infinite;
+  animation-delay: -3s;
+}
+
+/* Shimmer Effect */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Hover Effects */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Staggered Animation */
+.stagger-children > * {
+  animation: fadeInUp 0.6s ease-out both;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.5s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.6s; }
+
+/* Falling Stars Animation */
+@keyframes fallingStar {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(200px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+:root {
+  --navy-900: hsl(220, 67%, 29%);
+  --navy-800: hsl(220, 62%, 33%);
+  --navy-700: hsl(220, 65%, 40%);
+  --navy-600: hsl(220, 67%, 57%);
+  --accent: hsl(45, 93%, 59%);
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(220, 67%, 29%);
+  --muted: hsl(210, 40%, 96.5%);
+  --muted-foreground: hsl(215, 13%, 65%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(220, 67%, 29%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(220, 67%, 29%);
+  --border: hsl(214, 32%, 88%);
+  --input: hsl(214, 32%, 88%);
+  --primary: hsl(220, 67%, 29%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(210, 40%, 96.5%);
+  --secondary-foreground: hsl(220, 67%, 29%);
+  --accent-bg: hsl(45, 93%, 59%);
+  --accent-foreground: hsl(220, 67%, 29%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(220, 67%, 29%);
+  --radius: 1rem;
+}
+
+.dark {
+  --background: hsl(220, 67%, 12%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(220, 50%, 20%);
+  --muted-foreground: hsl(215, 20%, 65%);
+  --popover: hsl(220, 67%, 12%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(220, 67%, 12%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(220, 50%, 20%);
+  --input: hsl(220, 50%, 20%);
+  --primary: hsl(45, 93%, 59%);
+  --primary-foreground: hsl(220, 67%, 29%);
+  --secondary: hsl(220, 50%, 20%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent-bg: hsl(45, 93%, 59%);
+  --accent-foreground: hsl(220, 67%, 29%);
+  --destructive: hsl(0, 62%, 30%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(45, 93%, 59%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-primary font-bold;
+    letter-spacing: -0.02em;
+  }
+
+  button {
+    font-weight: 600;
+  }
+}
+
+@layer utilities {
+  .text-navy-900 {
+    color: var(--navy-900);
+  }
+  .text-navy-800 {
+    color: var(--navy-800);
+  }
+  .text-navy-700 {
+    color: var(--navy-700);
+  }
+  .text-navy-600 {
+    color: var(--navy-600);
+  }
+  .text-accent {
+    color: var(--accent);
+  }
+  .bg-navy-900 {
+    background-color: var(--navy-900);
+  }
+  .bg-navy-800 {
+    background-color: var(--navy-800);
+  }
+  .bg-navy-700 {
+    background-color: var(--navy-700);
+  }
+  .bg-navy-600 {
+    background-color: var(--navy-600);
+  }
+  .bg-accent {
+    background-color: var(--accent);
+  }
+  .border-navy-900 {
+    border-color: var(--navy-900);
+  }
+  .border-accent {
+    border-color: var(--accent);
+  }
+  .hover\:bg-navy-800:hover {
+    background-color: var(--navy-800);
+  }
+  .hover\:bg-yellow-300:hover {
+    background-color: hsl(45, 93%, 70%);
+  }
+  .hover\:text-navy-900:hover {
+    color: var(--navy-900);
+  }
+  .hover\:text-navy-700:hover {
+    color: var(--navy-700);
+  }
+  .hover\:text-navy-600:hover {
+    color: var(--navy-600);
+  }
+  .hover\:text-accent:hover {
+    color: var(--accent);
+  }
+}
+
+.gradient-navy {
+  background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-800) 50%, var(--navy-600) 100%);
+}
+
+.gradient-accent {
+  background: linear-gradient(135deg, var(--accent) 0%, hsl(45, 93%, 65%) 100%);
+}

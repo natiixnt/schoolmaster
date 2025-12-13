@@ -1,0 +1,23 @@
+RewriteEngine On
+
+# Handle Angular and React Router
+RewriteBase /
+
+# Handle API routes - pass through to Node.js
+RewriteRule ^api/(.*) - [L]
+
+# Handle client-side routing - all other routes go to index.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
+
+# Security headers
+Header always set X-Frame-Options DENY
+Header always set X-Content-Type-Options nosniff
+Header always set X-XSS-Protection "1; mode=block"
+
+# Cache static assets
+<FilesMatch "\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2)$">
+    ExpiresActive On
+    ExpiresDefault "access plus 1 month"
+</FilesMatch>
