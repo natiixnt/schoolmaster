@@ -4359,27 +4359,6 @@ Zwróć odpowiedź w formacie JSON:
     }
   }
 
-  // Tutor hourly availability management
-  async getTutorHourlyAvailability(tutorId: string) {
-    const availability = await db
-      .select()
-      .from(tutorHourlyAvailability)
-      .where(eq(tutorHourlyAvailability.tutorId, tutorId));
-
-    // Convert to nested object format { dayOfWeek: { hour: isAvailable } }
-    const result: Record<string, Record<string, boolean>> = {};
-    
-    availability.forEach((entry) => {
-      const dayKey = entry.dayOfWeek.toString();
-      if (!result[dayKey]) {
-        result[dayKey] = {};
-      }
-      result[dayKey][entry.hour] = entry.isAvailable;
-    });
-
-    return result;
-  }
-
   async updateTutorHourlyAvailability(tutorId: string, availabilityData: Record<string, Record<string, boolean>>) {
     // Delete existing availability
     await db
@@ -5015,22 +4994,6 @@ Zwróć odpowiedź w formacie JSON:
     }
   }
 
-  // Get tutor's hourly availability schedule
-  async getTutorHourlyAvailability(tutorId: string): Promise<any[]> {
-    try {
-      const availability = await db
-        .select()
-        .from(tutorHourlyAvailability)
-        .where(eq(tutorHourlyAvailability.tutorId, tutorId))
-        .orderBy(tutorHourlyAvailability.dayOfWeek, tutorHourlyAvailability.hour);
-
-      return availability;
-    } catch (error) {
-      console.error("Error fetching tutor availability:", error);
-      throw error;
-    }
-  }
-
   // Update tutor's availability schedule
   async updateTutorAvailability(tutorId: string, availability: any[]): Promise<void> {
     try {
@@ -5062,39 +5025,6 @@ Zwróć odpowiedź w formacie JSON:
       console.log(`Updated availability for tutor ${tutorId}: ${availableSlots.length} available slots`);
     } catch (error) {
       console.error("Error updating tutor availability:", error);
-      throw error;
-    }
-  }
-
-  // Get tutor's booked time slots (from scheduled lessons)
-  async getTutorBookedSlots(tutorId: string): Promise<any[]> {
-    try {
-      const bookedLessons = await db
-        .select({
-          scheduledAt: lessons.scheduledAt,
-          duration: lessons.duration
-        })
-        .from(lessons)
-        .where(and(
-          eq(lessons.tutorId, tutorId),
-          eq(lessons.status, "scheduled"),
-          sql`${lessons.scheduledAt} > NOW()` // Only future lessons
-        ));
-
-      // Convert lesson times to day/hour slots
-      const bookedSlots = bookedLessons.map(lesson => {
-        if (!lesson.scheduledAt) return null;
-        
-        const date = new Date(lesson.scheduledAt);
-        return {
-          dayOfWeek: date.getDay(),
-          hour: date.getHours().toString().padStart(2, '0') + ':00'
-        };
-      }).filter(Boolean);
-
-      return bookedSlots;
-    } catch (error) {
-      console.error("Error fetching tutor booked slots:", error);
       throw error;
     }
   }
