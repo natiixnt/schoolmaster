@@ -6,11 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Package, Check, Sparkles, ShoppingCart, ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
-import { loadStripe } from "@stripe/stripe-js";
 import { apiRequest } from "@/lib/queryClient";
 import { Navbar } from "@/components/Navbar";
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+import { isStripeEnabled, stripePromise } from "@/lib/stripe";
 
 interface LessonPackage {
   id: string;
@@ -54,6 +52,14 @@ export default function StudentPackages() {
 
   const handlePurchase = async (packageId: string) => {
     try {
+      if (!isStripeEnabled || !stripePromise) {
+        toast({
+          title: "Płatności wyłączone",
+          description: "Płatności kartą są wyłączone w tym środowisku.",
+          variant: "destructive",
+        });
+        return;
+      }
       setPurchasingPackageId(packageId);
 
       // Create Stripe checkout session
@@ -255,7 +261,7 @@ export default function StudentPackages() {
 
                       <Button
                         onClick={() => handlePurchase(pkg.id)}
-                        disabled={purchasingPackageId === pkg.id}
+                        disabled={purchasingPackageId === pkg.id || !isStripeEnabled}
                         className={`w-full ${
                           isPopular
                             ? "bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-navy-900 font-semibold"
@@ -275,6 +281,11 @@ export default function StudentPackages() {
                           </div>
                         )}
                       </Button>
+                      {!isStripeEnabled && (
+                        <p className="text-xs text-gray-500 text-center mt-2">
+                          Płatności kartą są wyłączone w tym środowisku.
+                        </p>
+                      )}
                     </CardContent>
                   </Card>
                 );

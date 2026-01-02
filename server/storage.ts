@@ -4656,7 +4656,11 @@ Zwróć odpowiedź w formacie JSON:
       // Capture payment from card authorization (if payment intent exists)
       if (inv.paymentIntentId) {
         try {
-          const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+          const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+          if (!stripeSecretKey) {
+            throw new Error("Płatności kartą są wyłączone");
+          }
+          const stripe = require('stripe')(stripeSecretKey);
           await stripe.paymentIntents.capture(inv.paymentIntentId);
           console.log(`Captured payment from authorization: ${inv.paymentIntentId}`);
         } catch (error) {
@@ -4763,7 +4767,11 @@ Zwróć odpowiedź w formacie JSON:
       // Release payment authorization if it exists
       if (inv.paymentIntentId) {
         try {
-          const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+          const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+          if (!stripeSecretKey) {
+            throw new Error("Płatności kartą są wyłączone");
+          }
+          const stripe = require('stripe')(stripeSecretKey);
           await stripe.paymentIntents.cancel(inv.paymentIntentId);
           console.log(`Released payment authorization: ${inv.paymentIntentId}`);
         } catch (error) {

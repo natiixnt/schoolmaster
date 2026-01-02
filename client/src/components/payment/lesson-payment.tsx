@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,8 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Wallet, CreditCard, CheckCircle, Clock } from "lucide-react";
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+import { isStripeEnabled } from "@/lib/stripe";
 
 interface LessonPaymentProps {
   lessonId: string;
@@ -193,6 +191,14 @@ export function LessonPayment({
   };
 
   const handleCardPayment = () => {
+    if (!isStripeEnabled) {
+      toast({
+        title: "Płatności wyłączone",
+        description: "Płatności kartą są wyłączone w tym środowisku.",
+        variant: "destructive",
+      });
+      return;
+    }
     setPaymentMethod('card');
     createPaymentIntent.mutate();
   };
@@ -338,8 +344,10 @@ export function LessonPayment({
 
               {/* Card Payment Option */}
               <Card 
-                className="cursor-pointer border-2 hover:border-navy-300 border-gray-200 transition-colors"
-                onClick={handleCardPayment}
+                className={`border-2 border-gray-200 transition-colors ${
+                  isStripeEnabled ? "cursor-pointer hover:border-navy-300" : "opacity-50 cursor-not-allowed"
+                }`}
+                onClick={isStripeEnabled ? handleCardPayment : undefined}
               >
                 <CardContent className="pt-4">
                   <div className="flex items-center justify-between">
@@ -353,7 +361,7 @@ export function LessonPayment({
                       </div>
                     </div>
                     <Badge variant="outline">
-                      Natychmiastowa
+                      {isStripeEnabled ? "Natychmiastowa" : "Wyłączona"}
                     </Badge>
                   </div>
                 </CardContent>

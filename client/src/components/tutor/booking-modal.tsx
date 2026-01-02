@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { VisualBookingCalendar } from "@/components/booking/visual-booking-calendar";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
+import { isStripeEnabled } from "@/lib/stripe";
 
 interface Tutor {
   id: string;
@@ -210,7 +211,7 @@ export default function BookingModal({ isOpen, onClose, tutor, balance, onBookLe
                 {/* Direct payment with Stripe */}
                 <Button 
                   onClick={() => handleBooking("stripe")}
-                  disabled={isLoading}
+                  disabled={isLoading || !isStripeEnabled}
                   className="h-12 flex items-center justify-center gap-2"
                   size="lg"
                   variant="secondary"
@@ -218,6 +219,11 @@ export default function BookingModal({ isOpen, onClose, tutor, balance, onBookLe
                 >
                   <CreditCard className="h-4 w-4" />
                   Karta płatnicza
+                  {!isStripeEnabled && (
+                    <Badge variant="outline" className="ml-2">
+                      Wyłączone
+                    </Badge>
+                  )}
                 </Button>
               </div>
               

@@ -10,14 +10,9 @@ import { Separator } from "@/components/ui/separator";
 import { Crown, Star, Calendar, CreditCard, X, ArrowLeft, Wallet } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useLocation } from "wouter";
-
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
-}
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+import { isStripeEnabled, stripePromise } from "@/lib/stripe";
 
 interface FeaturedStatus {
   isFeatured: boolean;
@@ -376,10 +371,15 @@ export default function TutorFeatured() {
                     <Badge variant="outline" className="text-blue-600 border-blue-600">Subskrypcja</Badge>
                   </div>
                   <p className="text-sm text-gray-600 mb-3">Automatyczna płatność kartą</p>
+                  {!isStripeEnabled && (
+                    <p className="text-xs text-blue-700 mb-3">
+                      Płatności kartą są wyłączone w tym środowisku.
+                    </p>
+                  )}
                   {!featuredStatus?.isFeatured && (
                     <Button
                       onClick={() => subscribeMutation.mutate()}
-                      disabled={subscribeMutation.isPending}
+                      disabled={subscribeMutation.isPending || !isStripeEnabled}
                       className="w-full bg-blue-600 hover:bg-blue-700"
                       data-testid="button-subscribe-featured"
                     >
@@ -430,7 +430,7 @@ export default function TutorFeatured() {
               </DialogDescription>
             </DialogHeader>
             
-            {clientSecret && (
+            {clientSecret && stripePromise && (
               <Elements stripe={stripePromise} options={{ clientSecret }}>
                 <PaymentForm 
                   clientSecret={clientSecret} 

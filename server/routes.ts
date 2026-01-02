@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { and, lt, eq } from "drizzle-orm";
@@ -32,13 +32,14 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { sendPasswordResetEmail, sendUnreadMessageNotification } from "./email-service";
 
-// Initialize Stripe
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
-}
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2025-07-30.basil",
-});
+// Initialize Stripe (optional)
+const stripeEnabled = Boolean(process.env.STRIPE_SECRET_KEY);
+const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+const stripe = stripeEnabled
+  ? new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+      apiVersion: "2025-07-30.basil",
+    })
+  : null;
 
 // Extend session interface to include adminId
 declare module 'express-session' {
@@ -102,6 +103,21 @@ const isAdminAuthenticated = (req: any, res: any, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  const getStripeClient = (res: Response) => {
+    if (!stripe) {
+      res.status(503).json({ message: "Płatności kartą są wyłączone" });
+      return null;
+    }
+    return stripe;
+  };
+
+  const getStripeWebhookSecret = (res: Response) => {
+    if (!stripe || !stripeWebhookSecret) {
+      res.status(503).json({ message: "Stripe webhook jest wyłączony" });
+      return null;
+    }
+    return stripeWebhookSecret;
+  };
   // Auth middleware
   setupAuth(app);
 
@@ -3264,6 +3280,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user || user.role !== "tutor") {
         return res.status(403).json({ message: "Access denied - tutors only" });
       }
+      const stripeClient = getStripeClient(res);
+      if (!stripeClient) return;
 
       // Check if tutor already has active featured subscription
       const tutorProfile = await storage.getTutorProfile(userId);
@@ -3274,7 +3292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create Stripe customer if doesn't exist
       let stripeCustomerId = user.stripeCustomerId;
       if (!stripeCustomerId) {
-        const customer = await stripe.customers.create({
+        const customer = await stripeClient.customers.create({
           email: user.email || undefined,
           name: `${user.firstName} ${user.lastName}`,
           metadata: {
@@ -3287,7 +3305,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create subscription for 50 PLN monthly
-      const subscription = await stripe.subscriptions.create({
+      const subscription = await stripeClient.subscriptions.create({
         customer: stripeCustomerId,
         items: [{
           price_data: {
@@ -3337,6 +3355,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user || user.role !== "tutor") {
         return res.status(403).json({ message: "Access denied - tutors only" });
       }
+      const stripeClient = getStripeClient(res);
+      if (!stripeClient) return;
 
       const tutorProfile = await storage.getTutorProfile(userId);
       if (!tutorProfile?.featuredSubscriptionId) {
@@ -3344,7 +3364,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Cancel the Stripe subscription
-      await stripe.subscriptions.cancel(tutorProfile.featuredSubscriptionId);
+      await stripeClient.subscriptions.cancel(tutorProfile.featuredSubscriptionId);
 
       // Update tutor profile
       await storage.updateTutorProfile(userId, {
@@ -3450,11 +3470,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Stripe webhook for handling subscription events
   app.post('/api/stripe/webhook', async (req, res) => {
     try {
+      const stripeClient = getStripeClient(res);
+      const webhookSecret = getStripeWebhookSecret(res);
+      if (!stripeClient || !webhookSecret) return;
       const sig = req.headers['stripe-signature'];
       let event;
 
       try {
-        event = stripe.webhooks.constructEvent(req.body, sig!, process.env.STRIPE_WEBHOOK_SECRET!);
+        event = stripeClient.webhooks.constructEvent(req.body, sig!, webhookSecret);
       } catch (err: any) {
         console.error('Webhook signature verification failed:', err.message);
         return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -3588,8 +3611,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!amount || amount <= 0) {
         return res.status(400).json({ message: "Valid amount is required" });
       }
+      const stripeClient = getStripeClient(res);
+      if (!stripeClient) return;
 
-      const paymentIntent = await stripe.paymentIntents.create({
+      const paymentIntent = await stripeClient.paymentIntents.create({
         amount: Math.round(amount * 100), // Convert to cents
         currency: "pln",
         metadata: {
@@ -3622,6 +3647,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate method
       if (!['balance', 'stripe'].includes(method)) {
         return res.status(400).json({ message: "Invalid payment method" });
+      }
+      if (method === 'stripe') {
+        const stripeClient = getStripeClient(res);
+        if (!stripeClient) return;
       }
 
       // Check if lesson is already paid
@@ -3660,6 +3689,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { lessonId } = req.params;
       const userId = req.user.id;
+      const stripeClient = getStripeClient(res);
+      if (!stripeClient) return;
       
       // Get lesson details to calculate amount
       const lesson = await storage.getLesson(lessonId);
@@ -3724,7 +3755,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Ensure amount is not negative
       amount = Math.max(0, amount);
 
-      const paymentIntent = await stripe.paymentIntents.create({
+      const paymentIntent = await stripeClient.paymentIntents.create({
         amount: Math.round(amount * 100), // Convert to cents
         currency: "pln",
         metadata: {
@@ -3759,14 +3790,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Webhook to handle successful Stripe payments
   app.post('/api/stripe/webhook', async (req, res) => {
+    const stripeClient = getStripeClient(res);
+    const webhookSecret = getStripeWebhookSecret(res);
+    if (!stripeClient || !webhookSecret) return;
     const sig = req.headers['stripe-signature'];
     let event;
 
     try {
-      event = stripe.webhooks.constructEvent(
+      event = stripeClient.webhooks.constructEvent(
         req.body,
         sig!,
-        process.env.STRIPE_WEBHOOK_SECRET || ''
+        webhookSecret
       );
     } catch (err: any) {
       console.error(`Webhook signature verification failed: ${err.message}`);
@@ -3939,6 +3973,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       const { packageId } = req.body;
+      const stripeClient = getStripeClient(res);
+      if (!stripeClient) return;
 
       if (!packageId) {
         return res.status(400).json({ message: "Package ID is required" });
@@ -3957,7 +3993,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create payment intent for package purchase
       const amount = parseFloat(packageData.finalPrice);
       
-      const paymentIntent = await stripe.paymentIntents.create({
+      const paymentIntent = await stripeClient.paymentIntents.create({
         amount: Math.round(amount * 100), // Convert to cents
         currency: "pln",
         metadata: {
@@ -4223,9 +4259,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const lessonPrice = 100; // 100 zł standard price
       
       if (paymentMethod === 'card') {
+        const stripeClient = getStripeClient(res);
+        if (!stripeClient) return;
         try {
-          const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-          const paymentIntent = await stripe.paymentIntents.create({
+          const paymentIntent = await stripeClient.paymentIntents.create({
             amount: lessonPrice * 100, // Convert to cents
             currency: 'pln',
             capture_method: 'manual', // Authorization only, capture when tutor accepts

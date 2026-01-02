@@ -1,5 +1,4 @@
 import { useStripe, Elements, PaymentElement, useElements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 import { useEffect, useState } from 'react';
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -7,13 +6,7 @@ import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-
-// Make sure to call `loadStripe` outside of a component's render to avoid
-// recreating the `Stripe` object on every render.
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
-}
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+import { isStripeEnabled, stripePromise } from "@/lib/stripe";
 
 const CheckoutForm = ({ amount, tutorId, timeSlot }: { amount: number, tutorId: string, timeSlot: string }) => {
   const stripe = useStripe();
@@ -81,6 +74,9 @@ export default function Checkout() {
   const amount = parseInt(urlParams.get('amount') || '100');
 
   useEffect(() => {
+    if (!isStripeEnabled) {
+      return;
+    }
     if (!tutorId || !amount) {
       toast({
         title: "Błędne parametry",
@@ -113,6 +109,28 @@ export default function Checkout() {
         setLocation('/find-tutor');
       });
   }, [tutorId, amount, timeSlot]);
+
+  if (!isStripeEnabled) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-md mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center">Płatności wyłączone</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-center">
+              <p className="text-gray-600">
+                Płatności kartą są wyłączone w tym środowisku.
+              </p>
+              <Button onClick={() => setLocation('/find-tutor')} className="w-full">
+                Powrót do wyboru korepetytora
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   if (!clientSecret) {
     return (

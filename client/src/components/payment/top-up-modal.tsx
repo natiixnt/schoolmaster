@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,9 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-
-// Initialize Stripe
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+import { isStripeEnabled } from "@/lib/stripe";
 
 interface TopUpModalProps {
   isOpen: boolean;
@@ -120,6 +117,14 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
   });
 
   const handleAmountSubmit = () => {
+    if (!isStripeEnabled) {
+      toast({
+        title: "Płatności wyłączone",
+        description: "Płatności kartą są wyłączone w tym środowisku.",
+        variant: "destructive",
+      });
+      return;
+    }
     const amountNum = parseFloat(amount);
     if (amountNum <= 0 || amountNum > 10000) {
       toast({
@@ -183,11 +188,16 @@ export function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
           
           <Button 
             onClick={handleAmountSubmit}
-            disabled={createPaymentIntent.isPending}
+            disabled={createPaymentIntent.isPending || !isStripeEnabled}
             className="w-full bg-navy-600 hover:bg-navy-700"
           >
             {createPaymentIntent.isPending ? "Przygotowywanie..." : "Przejdź do płatności"}
           </Button>
+          {!isStripeEnabled && (
+            <p className="text-xs text-gray-500 text-center">
+              Płatności kartą są wyłączone w tym środowisku.
+            </p>
+          )}
         </div>
       </DialogContent>
     </Dialog>
