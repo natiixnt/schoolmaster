@@ -418,15 +418,15 @@ export default function FindTutorSimple() {
           <div className="text-center text-sm text-gray-600">
             <h4 className="font-medium text-navy-900 mb-2">Jak to działa?</h4>
             <div className="grid md:grid-cols-3 gap-4">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col items-center text-center gap-2">
                 <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs">1</div>
                 <span>System wybiera następny temat automatycznie</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col items-center text-center gap-2">
                 <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs">2</div>
                 <span>Wybierz korepetytora z listy</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col items-center text-center gap-2">
                 <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs">3</div>
                 <span>Ustaw termin i zatwierdź rezerwację</span>
               </div>

@@ -142,7 +142,7 @@ export function ReferralCard({ referralCode }: ReferralCardProps) {
           </DialogContent>
         </Dialog>
 
-        <div className="bg-gradient-to-r from-[#F1C40F] to-[#f39c12] p-4 rounded-lg text-[#252627]">
+        <div className="bg-white p-4 rounded-lg text-[#5B4B1B] border border-[#EAD9A6] shadow-sm">
           <h3 className="font-bold mb-1">💡 Jak to działa?</h3>
           <ul className="text-sm space-y-1">
             <li>• Twoi znajomi otrzymują 5% zniżki na pierwszą lekcję</li>

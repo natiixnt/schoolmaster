@@ -131,6 +131,8 @@ export default function Messages() {
     conv.otherUser.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     conv.otherUser.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  const hasConversations = conversations.length > 0;
+  const noConversations = !conversationsLoading && !hasConversations;
 
   const getUserDisplayName = (user: User) => {
     if (user.firstName && user.lastName) {
@@ -166,6 +168,9 @@ export default function Messages() {
 
   // Combined users list for dropdown - allUsers already includes type field
   const availableUsers = Array.isArray(allUsers) ? allUsers.filter((u: any) => u.id !== (user as any)?.id) : []; // Exclude current user
+  const uniqueAvailableUsers = availableUsers.filter(
+    (candidate: any, index: number, self: any[]) => self.findIndex((u) => u.id === candidate.id) === index
+  );
 
   // Get access info message based on user role
   const getAccessInfoMessage = () => {
@@ -233,23 +238,23 @@ export default function Messages() {
                         <SelectValue placeholder="Wybierz osobę" />
                       </SelectTrigger>
                       <SelectContent>
-                        {availableUsers
-                          .filter((user: any, index: number, self: any[]) => 
-                            self.findIndex(u => u.id === user.id) === index
-                          )
-                          .map((user: any) => (
-                          <SelectItem key={`user-${user.id}`} value={user.id}>
-                            <div className="flex flex-col gap-1 py-1">
-                              <div className="flex items-center gap-2">
-                                <Badge variant={user.type === 'student' ? 'default' : 'secondary'} className="text-xs">
-                                  {user.type === 'student' ? 'Uczeń' : 'Korepetytor'}
-                                </Badge>
-                                <span className="font-medium text-sm">{user.firstName} {user.lastName}</span>
+                        {uniqueAvailableUsers.length === 0 ? (
+                          <div className="px-3 py-2 text-sm text-gray-500">Brak osób do rozmowy</div>
+                        ) : (
+                          uniqueAvailableUsers.map((user: any) => (
+                            <SelectItem key={`user-${user.id}`} value={user.id}>
+                              <div className="flex flex-col gap-1 py-1">
+                                <div className="flex items-center gap-2">
+                                  <Badge variant={user.type === 'student' ? 'default' : 'secondary'} className="text-xs">
+                                    {user.type === 'student' ? 'Uczeń' : 'Korepetytor'}
+                                  </Badge>
+                                  <span className="font-medium text-sm">{user.firstName} {user.lastName}</span>
+                                </div>
+                                <span className="text-xs text-gray-500">{user.email}</span>
                               </div>
-                              <span className="text-xs text-gray-500">{user.email}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     <div className="flex gap-2">
@@ -288,7 +293,7 @@ export default function Messages() {
                 </div>
               ) : filteredConversations.length === 0 ? (
                 <div className="p-6 text-center text-gray-500">
-                  <div className="text-sm">{searchQuery ? "Nie znaleziono rozmów" : "Brak rozmów"}</div>
+                  <div className="text-sm">{searchQuery ? "Nie znaleziono rozmów" : "Brak osób do rozmowy"}</div>
                 </div>
               ) : (
                 filteredConversations.map((conversation) => (
@@ -499,8 +504,14 @@ export default function Messages() {
                   <div className="inline-flex p-6 bg-gray-100 rounded-full mb-4">
                     <MessageCircle className="h-12 w-12 text-gray-400" />
                   </div>
-                  <h3 className="text-lg font-semibold mb-2 text-gray-900">Wybierz rozmowę</h3>
-                  <p className="text-sm text-gray-500">Wybierz rozmowę z listy, aby rozpocząć czat</p>
+                  <h3 className="text-lg font-semibold mb-2 text-gray-900">
+                    {noConversations ? "Brak osób do rozmowy" : "Wybierz rozmowę"}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    {noConversations
+                      ? "Nie masz jeszcze żadnych rozmów."
+                      : "Wybierz rozmowę z listy, aby rozpocząć czat"}
+                  </p>
                 </div>
               </div>
             )}
