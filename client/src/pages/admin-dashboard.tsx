@@ -185,24 +185,24 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="flex w-full max-w-5xl mx-auto bg-white border border-gray-200 p-1 rounded-lg">
+            <TabsList className="flex w-full mx-auto flex-nowrap justify-center gap-1 bg-white border border-gray-200 p-1 rounded-lg">
               <TabsTrigger 
                 value="overview" 
-                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
+                className="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-2 text-xs lg:text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
               >
                 <TrendingUp className="w-4 h-4" />
                 Przegląd
               </TabsTrigger>
               <TabsTrigger 
                 value="users" 
-                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
+                className="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-2 text-xs lg:text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
               >
                 <Users className="w-4 h-4" />
                 Użytkownicy
               </TabsTrigger>
               <TabsTrigger 
                 value="courses" 
-                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
+                className="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-2 text-xs lg:text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
               >
                 <BookOpen className="w-4 h-4" />
                 Kursy
@@ -210,7 +210,7 @@ export default function AdminDashboard() {
 
               <TabsTrigger 
                 value="homework" 
-                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
+                className="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-2 text-xs lg:text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
               >
                 <FileText className="w-4 h-4" />
                 Prace domowe
@@ -218,35 +218,35 @@ export default function AdminDashboard() {
 
               <TabsTrigger 
                 value="finances" 
-                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
+                className="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-2 text-xs lg:text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
               >
                 <DollarSign className="w-4 h-4" />
                 Finanse
               </TabsTrigger>
               <TabsTrigger 
                 value="subjects" 
-                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
+                className="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-2 text-xs lg:text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
               >
                 <BookOpen className="w-4 h-4" />
                 Przedmioty
               </TabsTrigger>
               <TabsTrigger 
                 value="gamification" 
-                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
+                className="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-2 text-xs lg:text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
               >
                 <Trophy className="w-4 h-4" />
                 Gamifikacja
               </TabsTrigger>
               <TabsTrigger 
                 value="mailing" 
-                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
+                className="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-2 text-xs lg:text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
               >
                 <Mail className="w-4 h-4" />
                 Mailing
               </TabsTrigger>
               <TabsTrigger 
                 value="quizzes" 
-                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
+                className="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-2 text-xs lg:text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
                 data-testid="tab-quizzes"
                 onClick={() => setLocation('/quiz-management')}
               >
@@ -255,7 +255,7 @@ export default function AdminDashboard() {
               </TabsTrigger>
               <TabsTrigger 
                 value="settings" 
-                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
+                className="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-2 text-xs lg:text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
                 data-testid="tab-settings"
               >
                 <Settings className="w-4 h-4" />

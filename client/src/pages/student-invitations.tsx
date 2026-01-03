@@ -94,6 +94,130 @@ export default function StudentInvitations() {
     return `${minutes}m`;
   };
 
+  const activeInvitations = invitations.filter((invitation: any) => invitation.status === "pending");
+  const inactiveInvitations = invitations.filter((invitation: any) => invitation.status !== "pending");
+
+  const renderInvitationCard = (invitation: any, isInactive = false) => (
+    <Card key={invitation.id} className={isInactive ? "bg-gray-50 border-gray-200" : undefined}>
+      <CardHeader>
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <User className="h-5 w-5 text-blue-600" />
+            <div>
+              <CardTitle className="text-lg">
+                {invitation.tutorName}
+              </CardTitle>
+              <CardDescription>
+                Przedmiot: {invitation.subjectName}
+              </CardDescription>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge className={getStatusColor(invitation.status)}>
+              {getStatusText(invitation.status)}
+            </Badge>
+            {invitation.status === "pending" && (
+              <div className="flex items-center gap-1 text-sm text-gray-500">
+                <Clock className="h-4 w-4" />
+                {formatTimeRemaining(invitation.expiresAt)}
+              </div>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        {invitation.specificNeeds && (
+          <div>
+            <h4 className="font-medium text-gray-900 mb-2">Szczególne potrzeby:</h4>
+            <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded-lg">
+              {invitation.specificNeeds}
+            </p>
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <h4 className="font-medium text-gray-900 mb-2">Preferowane dni:</h4>
+            <div className="flex flex-wrap gap-1">
+              {invitation.matchingDays?.map((day: number) => {
+                const dayNames = ['pon', 'wt', 'śr', 'czw', 'pt', 'sob', 'ndz'];
+                return (
+                  <Badge key={day} variant="outline" className="text-xs">
+                    {dayNames[day]}
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
+          
+          <div className="flex-1">
+            <h4 className="font-medium text-gray-900 mb-2">Preferowany termin:</h4>
+            <div className="flex flex-wrap gap-1">
+              {invitation.matchingHours?.map((hour: string) => {
+                const date = new Date(hour);
+                return (
+                  <Badge key={hour} variant="outline" className="text-xs">
+                    {date.toLocaleDateString("pl-PL")} o {date.toLocaleTimeString("pl-PL", { hour: '2-digit', minute: '2-digit' })}
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="text-sm text-gray-500">
+          Wysłane: {new Date(invitation.sentAt).toLocaleDateString('pl-PL', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+        </div>
+
+        {invitation.tutorResponse && (
+          <div className={`p-3 rounded-lg ${
+            invitation.status === 'accepted' 
+              ? 'bg-green-50 border border-green-200' 
+              : 'bg-red-50 border border-red-200'
+          }`}>
+            <h4 className="font-medium text-gray-900 mb-1">
+              Odpowiedź korepetytora:
+            </h4>
+            <p className="text-sm text-gray-700">{invitation.tutorResponse}</p>
+            {invitation.respondedAt && (
+              <p className="text-xs text-gray-500 mt-1">
+                {new Date(invitation.respondedAt).toLocaleDateString('pl-PL', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+            )}
+          </div>
+        )}
+
+        {invitation.status === "pending" && (
+          <div className="flex justify-end pt-2">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setCancelConfirmId(invitation.id)}
+              disabled={cancelMutation.isPending}
+              className="flex items-center gap-2"
+            >
+              <X className="h-4 w-4" />
+              Anuluj zaproszenie
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
   if (isLoading) {
     return (
       <div className="max-w-4xl mx-auto p-6">
@@ -123,130 +247,37 @@ export default function StudentInvitations() {
             <p className="text-gray-600">
               Nie wysłałeś jeszcze żadnych zapytań do korepetytorów. Znajdź korepetytora i wyślij zaproszenie.
             </p>
+            <Button
+              onClick={() => setLocation("/find-tutor")}
+              className="mt-6"
+            >
+              Znajdź korepetytora
+            </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {invitations.map((invitation: any) => (
-            <Card key={invitation.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <User className="h-5 w-5 text-blue-600" />
-                    <div>
-                      <CardTitle className="text-lg">
-                        {invitation.tutorName}
-                      </CardTitle>
-                      <CardDescription>
-                        Przedmiot: {invitation.subjectName}
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={getStatusColor(invitation.status)}>
-                      {getStatusText(invitation.status)}
-                    </Badge>
-                    {invitation.status === "pending" && (
-                      <div className="flex items-center gap-1 text-sm text-gray-500">
-                        <Clock className="h-4 w-4" />
-                        {formatTimeRemaining(invitation.expiresAt)}
-                      </div>
-                    )}
-                  </div>
+        <div className="space-y-8">
+          {activeInvitations.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">Aktywne zaproszenia</h2>
+                <span className="text-sm text-gray-500">{activeInvitations.length}</span>
+              </div>
+              {activeInvitations.map((invitation: any) => renderInvitationCard(invitation))}
+            </div>
+          )}
+          {inactiveInvitations.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-700">Poprzednie zaproszenia</h2>
+                  <p className="text-sm text-gray-500">Zakończone lub anulowane</p>
                 </div>
-              </CardHeader>
-              
-              <CardContent className="space-y-4">
-                {invitation.specificNeeds && (
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Szczególne potrzeby:</h4>
-                    <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded-lg">
-                      {invitation.specificNeeds}
-                    </p>
-                  </div>
-                )}
-
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 mb-2">Preferowane dni:</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {invitation.matchingDays?.map((day: number) => {
-                        const dayNames = ['pon', 'wt', 'śr', 'czw', 'pt', 'sob', 'ndz'];
-                        return (
-                          <Badge key={day} variant="outline" className="text-xs">
-                            {dayNames[day]}
-                          </Badge>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 mb-2">Preferowany termin:</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {invitation.matchingHours?.map((hour: string) => {
-                        const date = new Date(hour);
-                        return (
-                          <Badge key={hour} variant="outline" className="text-xs">
-                            {date.toLocaleDateString("pl-PL")} o {date.toLocaleTimeString("pl-PL", { hour: '2-digit', minute: '2-digit' })}
-                          </Badge>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-sm text-gray-500">
-                  Wysłane: {new Date(invitation.sentAt).toLocaleDateString('pl-PL', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </div>
-
-                {invitation.tutorResponse && (
-                  <div className={`p-3 rounded-lg ${
-                    invitation.status === 'accepted' 
-                      ? 'bg-green-50 border border-green-200' 
-                      : 'bg-red-50 border border-red-200'
-                  }`}>
-                    <h4 className="font-medium text-gray-900 mb-1">
-                      Odpowiedź korepetytora:
-                    </h4>
-                    <p className="text-sm text-gray-700">{invitation.tutorResponse}</p>
-                    {invitation.respondedAt && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        {new Date(invitation.respondedAt).toLocaleDateString('pl-PL', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {invitation.status === "pending" && (
-                  <div className="flex justify-end pt-2">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setCancelConfirmId(invitation.id)}
-                      disabled={cancelMutation.isPending}
-                      className="flex items-center gap-2"
-                    >
-                      <X className="h-4 w-4" />
-                      Anuluj zaproszenie
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                <span className="text-sm text-gray-500">{inactiveInvitations.length}</span>
+              </div>
+              {inactiveInvitations.map((invitation: any) => renderInvitationCard(invitation, true))}
+            </div>
+          )}
         </div>
       )}
 
