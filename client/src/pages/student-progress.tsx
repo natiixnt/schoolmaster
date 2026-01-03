@@ -298,10 +298,10 @@ export default function StudentProgress() {
           const progress = total > 0 ? (completed / total) * 100 : 0;
           
           return (
-            <Card key={chapter.id} className="overflow-hidden">
+            <Card key={chapter.id} className="overflow-hidden transition-colors hover:bg-gray-50">
               <Collapsible open={isOpen} onOpenChange={() => toggleChapter(chapter.id)}>
                 <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+                  <CardHeader className="cursor-pointer transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
@@ -342,7 +342,13 @@ export default function StudentProgress() {
                 <CollapsibleContent>
                   <CardContent className="pt-0">
                     <div className="space-y-3">
-                      {topics.map((topic: any) => (
+                      {topics.length === 0 ? (
+                        <div className="rounded-lg border border-dashed border-gray-200 bg-white p-4 text-center">
+                          <div className="text-sm text-gray-600">Brak tematów w tym dziale</div>
+                          <div className="text-xs text-gray-500 mt-1">Nowe tematy pojawią się wkrótce.</div>
+                        </div>
+                      ) : (
+                      topics.map((topic: any) => (
                         <div key={topic.topicId} className={`p-4 rounded-lg border-2 transition-all duration-300 ${
                           topic.status === 'completed' ? 'bg-green-50 border-green-200' :
                           topic.status === 'in_progress' ? 'bg-yellow-50 border-yellow-200' :
@@ -559,7 +565,7 @@ export default function StudentProgress() {
                             </div>
                           )}
                         </div>
-                      ))}
+                      )))}
                     </div>
                   </CardContent>
                 </CollapsibleContent>
