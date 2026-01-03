@@ -6262,24 +6262,39 @@ Zwróć odpowiedź w formacie JSON:
   }
 
   // Update a referral system setting
-  async updateReferralSetting(key: string, value: string, adminId: string): Promise<void> {
+  async updateReferralSetting(key: string, value: string, updatedByUserId?: string): Promise<void> {
     const existing = await db.select().from(systemSettings).where(eq(systemSettings.key, key)).limit(1);
-    
+    const updateData: { value: string; updatedAt: Date; updatedBy?: string } = {
+      value,
+      updatedAt: new Date(),
+    };
+    if (updatedByUserId) {
+      updateData.updatedBy = updatedByUserId;
+    }
+
     if (existing.length > 0) {
       // Update existing
       await db.update(systemSettings)
-        .set({ value, updatedAt: new Date(), updatedBy: adminId })
+        .set(updateData)
         .where(eq(systemSettings.key, key));
     } else {
       // Insert new
-      await db.insert(systemSettings).values({
+      const insertData: {
+        key: string;
+        value: string;
+        description: string;
+        updatedBy?: string;
+      } = {
         key,
         value,
         description: key === 'referral_bonus_amount' 
           ? 'Kwota bonusu dla polecającego w PLN' 
           : 'Procent zniżki dla poleconego',
-        updatedBy: adminId
-      });
+      };
+      if (updatedByUserId) {
+        insertData.updatedBy = updatedByUserId;
+      }
+      await db.insert(systemSettings).values(insertData);
     }
   }
 

@@ -1645,10 +1645,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/admin/referral-settings', isAdminAuthenticated, async (req: any, res) => {
     try {
       const { bonusAmount, discountPercent } = req.body;
-      const adminId = req.session?.adminId || 'admin';
+      const updatedByUserId = req.user?.id;
 
-      await storage.updateReferralSetting('referral_bonus_amount', bonusAmount, adminId);
-      await storage.updateReferralSetting('referral_discount_percent', discountPercent, adminId);
+      await storage.updateReferralSetting('referral_bonus_amount', bonusAmount, updatedByUserId);
+      await storage.updateReferralSetting('referral_discount_percent', discountPercent, updatedByUserId);
 
       res.json({ message: "Settings updated successfully" });
     } catch (error) {

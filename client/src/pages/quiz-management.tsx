@@ -21,6 +21,10 @@ import { Plus, Edit, Trash, FileQuestion, Trophy, ArrowLeft, X } from "lucide-re
 import { Separator } from "@/components/ui/separator";
 import SchoolMasterLogo from "@/assets/schoolmaster-logo.png";
 
+interface QuizManagementProps {
+  embedded?: boolean;
+}
+
 // Form schemas
 const questionFormSchema = z.object({
   questionType: z.enum(['multiple_choice', 'multiple_select', 'true_false', 'short_answer', 'math_problem']),
@@ -61,7 +65,7 @@ const difficultyLabels: Record<string, string> = {
   hard: "Trudny",
 };
 
-export default function QuizManagement() {
+export default function QuizManagement({ embedded = false }: QuizManagementProps) {
   const { toast } = useToast();
   const { isAuthenticated, isLoading, logout } = useAdminAuth();
   const [, setLocation] = useLocation();
@@ -473,42 +477,12 @@ export default function QuizManagement() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <img 
-                src={SchoolMasterLogo} 
-                alt="SchoolMaster" 
-                className="h-6"
-              />
-              <span className="text-sm bg-navy-100 text-navy-800 px-2 py-1 rounded-full">
-                Admin
-              </span>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setLocation('/admin-dashboard')}
-                data-testid="button-back"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Powrót do panelu
-              </Button>
-              <Button onClick={handleLogout} variant="outline" data-testid="button-logout">
-                Wyloguj się
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+  const contentWrapperClass = embedded
+    ? "space-y-6"
+    : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8";
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  const mainContent = (
+    <div className={contentWrapperClass}>
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-navy-900" data-testid="text-title">
@@ -718,7 +692,521 @@ export default function QuizManagement() {
             </div>
           </TabsContent>
         </Tabs>
-      </div>
+    </div>
+  );
+
+  if (embedded) {
+    return (
+      <>
+        {mainContent}
+        {/* Question Dialog */}
+        <Dialog open={isQuestionDialogOpen} onOpenChange={setIsQuestionDialogOpen}>
+          <DialogContent className="max-w-2xl" data-testid="dialog-question">
+            <DialogHeader>
+              <DialogTitle>
+                {dialogMode === 'add' ? 'Dodaj pytanie' : 'Edytuj pytanie'}
+              </DialogTitle>
+              <DialogDescription>
+                {dialogMode === 'add' 
+                  ? 'Wypełnij pola poniżej, aby dodać nowe pytanie do banku pytań.'
+                  : 'Edytuj pola poniżej, aby zaktualizować pytanie.'}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <Form {...questionForm}>
+              <form onSubmit={questionForm.handleSubmit(onSubmitQuestion)} className="space-y-4">
+                {/* Question Type */}
+                <FormField
+                  control={questionForm.control}
+                  name="questionType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Typ pytania</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger data-testid="select-question-type">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="multiple_choice">Wybór jednokrotny</SelectItem>
+                          <SelectItem value="multiple_select">Wybór wielokrotny</SelectItem>
+                          <SelectItem value="true_false">Prawda/Fałsz</SelectItem>
+                          <SelectItem value="short_answer">Krótka odpowiedź</SelectItem>
+                          <SelectItem value="math_problem">Problem matematyczny</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+
+                {/* Question Text */}
+                <FormField
+                  control={questionForm.control}
+                  name="questionText"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Treść pytania</FormLabel>
+                      <Textarea {...field} rows={3} data-testid="input-question-text" />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Module Code */}
+                <FormField
+                  control={questionForm.control}
+                  name="moduleCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Kod modułu</FormLabel>
+                      <Input {...field} placeholder="np. MAT-L01" data-testid="input-module-code" />
+                      <FormDescription>Identyfikator tematu/modułu</FormDescription>
+                    </FormItem>
+                  )}
+                />
+
+                {/* Options (for multiple choice/select) */}
+                {(watchQuestionType === 'multiple_choice' || watchQuestionType === 'multiple_select') && (
+                  <FormField
+                    control={questionForm.control}
+                    name="options"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Opcje odpowiedzi (jedna na linię)</FormLabel>
+                        <Textarea 
+                          {...field} 
+                          rows={4} 
+                          placeholder="A. Opcja 1&#10;B. Opcja 2&#10;C. Opcja 3&#10;D. Opcja 4"
+                          data-testid="input-options"
+                        />
+                        <FormDescription>Wpisz każdą opcję w nowej linii</FormDescription>
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {/* Correct Answer */}
+                <FormField
+                  control={questionForm.control}
+                  name="correctAnswer"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Poprawna odpowiedź</FormLabel>
+                      {watchQuestionType === 'multiple_choice' ? (
+                        <Input {...field} placeholder="np. A" data-testid="input-correct-answer" />
+                      ) : watchQuestionType === 'multiple_select' ? (
+                        <Input {...field} placeholder="np. A,C (oddzielone przecinkami)" data-testid="input-correct-answer" />
+                      ) : watchQuestionType === 'true_false' ? (
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <SelectTrigger data-testid="select-correct-answer">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="true">Prawda</SelectItem>
+                            <SelectItem value="false">Fałsz</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input {...field} placeholder="Wpisz poprawną odpowiedź" data-testid="input-correct-answer" />
+                      )}
+                    </FormItem>
+                  )}
+                />
+
+                {/* Points */}
+                <FormField
+                  control={questionForm.control}
+                  name="points"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Punkty</FormLabel>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                        data-testid="input-points"
+                      />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Difficulty */}
+                <FormField
+                  control={questionForm.control}
+                  name="difficulty"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Poziom trudności</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger data-testid="select-difficulty">
+                          <SelectValue placeholder="Wybierz poziom" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="easy">Łatwy</SelectItem>
+                          <SelectItem value="medium">Średni</SelectItem>
+                          <SelectItem value="hard">Trudny</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+
+                {/* Explanation */}
+                <FormField
+                  control={questionForm.control}
+                  name="explanation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Wyjaśnienie (opcjonalnie)</FormLabel>
+                      <Textarea {...field} rows={2} data-testid="input-explanation" />
+                      <FormDescription>Wyjaśnienie dla uczniów po udzieleniu odpowiedzi</FormDescription>
+                    </FormItem>
+                  )}
+                />
+
+                <DialogFooter>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsQuestionDialogOpen(false)}
+                    data-testid="button-cancel-question"
+                  >
+                    Anuluj
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={addQuestionMutation.isPending || updateQuestionMutation.isPending}
+                    data-testid="button-submit-question"
+                  >
+                    {dialogMode === 'add' ? 'Dodaj' : 'Zapisz'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Quiz Dialog */}
+        <Dialog open={isQuizDialogOpen} onOpenChange={setIsQuizDialogOpen}>
+          <DialogContent className="max-w-2xl" data-testid="dialog-quiz">
+            <DialogHeader>
+              <DialogTitle>
+                {dialogMode === 'add' ? 'Utwórz quiz' : 'Edytuj quiz'}
+              </DialogTitle>
+              <DialogDescription>
+                {dialogMode === 'add' 
+                  ? 'Wypełnij pola poniżej, aby utworzyć nowy quiz.'
+                  : 'Edytuj pola poniżej, aby zaktualizować quiz.'}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <Form {...quizForm}>
+              <form onSubmit={quizForm.handleSubmit(onSubmitQuiz)} className="space-y-4">
+                {/* Title */}
+                <FormField
+                  control={quizForm.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tytuł</FormLabel>
+                      <Input {...field} data-testid="input-quiz-title" />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Module Code */}
+                <FormField
+                  control={quizForm.control}
+                  name="moduleCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Kod modułu</FormLabel>
+                      <Input {...field} placeholder="np. MAT-L01" data-testid="input-quiz-module-code" />
+                      <FormDescription>Identyfikator tematu/modułu</FormDescription>
+                    </FormItem>
+                  )}
+                />
+
+                {/* Description */}
+                <FormField
+                  control={quizForm.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Opis (opcjonalnie)</FormLabel>
+                      <Textarea {...field} rows={2} data-testid="input-quiz-description" />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Time Limit */}
+                <FormField
+                  control={quizForm.control}
+                  name="timeLimit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Limit czasu (minuty, opcjonalnie)</FormLabel>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                        data-testid="input-time-limit"
+                      />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Passing Score */}
+                <FormField
+                  control={quizForm.control}
+                  name="passingScore"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Próg zdania (%)</FormLabel>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        data-testid="input-passing-score"
+                      />
+                    </FormItem>
+                  )}
+                />
+
+                {/* XP Reward */}
+                <FormField
+                  control={quizForm.control}
+                  name="xpReward"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nagroda XP</FormLabel>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        data-testid="input-xp-reward"
+                      />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Max Attempts */}
+                <FormField
+                  control={quizForm.control}
+                  name="maxAttempts"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Maksymalna liczba prób (opcjonalnie)</FormLabel>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                        data-testid="input-max-attempts"
+                      />
+                    </FormItem>
+                  )}
+                />
+
+                <DialogFooter>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsQuizDialogOpen(false)}
+                    data-testid="button-cancel-quiz"
+                  >
+                    Anuluj
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={addQuizMutation.isPending || updateQuizMutation.isPending}
+                    data-testid="button-submit-quiz"
+                  >
+                    {dialogMode === 'add' ? 'Utwórz' : 'Zapisz'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Question Manager Dialog */}
+        <Dialog open={isQuestionManagerOpen} onOpenChange={setIsQuestionManagerOpen}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto" data-testid="dialog-question-manager">
+            <DialogHeader>
+              <DialogTitle>Zarządzaj pytaniami - {selectedQuiz?.title}</DialogTitle>
+              <DialogDescription>
+                Dodaj lub usuń pytania z tego quizu
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6">
+              {/* Current Questions in Quiz */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Pytania w quizie ({quizQuestions.length})</h3>
+                {quizQuestions.length === 0 ? (
+                  <p className="text-sm text-gray-500 py-4 text-center">
+                    Brak pytań w tym quizie. Dodaj pytania poniżej.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {quizQuestions.map((qq: any, index: number) => (
+                      <Card key={qq.questionId} className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <Badge className="text-xs">{index + 1}</Badge>
+                              <div>
+                                <p className="font-medium">{qq.question.questionText}</p>
+                                <div className="flex gap-2 mt-1">
+                                  <Badge variant="outline" className="text-xs">
+                                    {questionTypeLabels[qq.question.questionType]}
+                                  </Badge>
+                                  <span className="text-xs text-gray-500">
+                                    {qq.question.points} pkt
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleRemoveQuestionFromQuiz(selectedQuiz!.id, qq.questionId)}
+                            disabled={removeQuestionMutation.isPending}
+                            data-testid={`button-remove-question-${qq.questionId}`}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Available Questions to Add */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Dostępne pytania</h3>
+                
+                {/* Filter */}
+                <div className="flex gap-4 mb-4">
+                  <Select value={addQuestionFilter} onValueChange={setAddQuestionFilter}>
+                    <SelectTrigger className="w-[200px]" data-testid="select-add-question-filter">
+                      <SelectValue placeholder="Filtruj po typie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Wszystkie typy</SelectItem>
+                      <SelectItem value="multiple_choice">Wybór jednokrotny</SelectItem>
+                      <SelectItem value="multiple_select">Wybór wielokrotny</SelectItem>
+                      <SelectItem value="true_false">Prawda/Fałsz</SelectItem>
+                      <SelectItem value="short_answer">Krótka odpowiedź</SelectItem>
+                      <SelectItem value="math_problem">Problem matematyczny</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Input
+                    placeholder="Szukaj..."
+                    value={addQuestionSearch}
+                    onChange={(e) => setAddQuestionSearch(e.target.value)}
+                    className="flex-1"
+                    data-testid="input-add-question-search"
+                  />
+                </div>
+
+                {/* Available Questions List */}
+                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                  {availableQuestions.length === 0 ? (
+                    <p className="text-sm text-gray-500 py-4 text-center">
+                      Brak dostępnych pytań do dodania
+                    </p>
+                  ) : (
+                    availableQuestions.map((question: any) => (
+                      <Card key={question.id} className="p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{question.questionText}</p>
+                            <div className="flex gap-2 mt-1">
+                              <Badge variant="outline" className="text-xs">
+                                {questionTypeLabels[question.questionType]}
+                              </Badge>
+                              <span className="text-xs text-gray-500">
+                                {question.points} pkt
+                              </span>
+                              {question.moduleCode && (
+                                <span className="text-xs text-gray-500">
+                                  {question.moduleCode}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => handleAddQuestionToQuiz(selectedQuiz!.id, question.id)}
+                            disabled={addQuestionToQuizMutation.isPending}
+                            data-testid={`button-add-question-${question.id}`}
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            Dodaj
+                          </Button>
+                        </div>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsQuestionManagerOpen(false)}
+                data-testid="button-close-question-manager"
+              >
+                Zamknij
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-2">
+              <img 
+                src={SchoolMasterLogo} 
+                alt="SchoolMaster" 
+                className="h-6"
+              />
+              <span className="text-sm bg-navy-100 text-navy-800 px-2 py-1 rounded-full">
+                Admin
+              </span>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setLocation('/admin-dashboard')}
+                data-testid="button-back"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Powrót do panelu
+              </Button>
+              <Button onClick={handleLogout} variant="outline" data-testid="button-logout">
+                Wyloguj się
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {mainContent}
 
       {/* Question Dialog */}
       <Dialog open={isQuestionDialogOpen} onOpenChange={setIsQuestionDialogOpen}>

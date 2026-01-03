@@ -25,6 +25,7 @@ import RevenueDetailsModal from "@/components/admin/revenue-details-modal";
 import DailyRevenueChart from "@/components/admin/daily-revenue-chart";
 import LessonList from "@/components/admin/lesson-list";
 import MailingListManagement from "@/components/admin/mailing-list-management";
+import QuizManagement from "@/pages/quiz-management";
 
 // Preview components are no longer needed - redirecting to existing dashboard pages with demo mode
 
@@ -248,7 +249,6 @@ export default function AdminDashboard() {
                 value="quizzes" 
                 className="flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-2 text-xs lg:text-sm font-medium text-navy-700 data-[state=active]:bg-navy-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md whitespace-nowrap"
                 data-testid="tab-quizzes"
-                onClick={() => setLocation('/quiz-management')}
               >
                 <FileText className="w-4 h-4" />
                 Quizy
@@ -507,6 +507,10 @@ export default function AdminDashboard() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="quizzes">
+              <QuizManagement embedded />
             </TabsContent>
 
             <TabsContent value="settings">
